@@ -541,11 +541,11 @@ export const VideoTestModal: React.FC<VideoTestModalProps> = ({
             </div>
           )}
 
-          {/* Adsterra Sponsored Banner for Video Page */}
-          {activeVideoAds.length > 0 && (
+          {/* Adsterra Sponsored Banner for Video Page (if native banner is configured) */}
+          {activeVideoAds.some((a) => a.type === 'native_banner') && (
             <div className="px-4 sm:px-5 pt-2">
               <AdsterraBannerSlot
-                ad={activeVideoAds.find((a) => a.type === 'native_banner' || a.type === 'custom_script' || a.type === 'direct_link') || activeVideoAds[0]}
+                ad={activeVideoAds.find((a) => a.type === 'native_banner')}
                 placementName="Video Stream Sponsor Ad"
               />
             </div>

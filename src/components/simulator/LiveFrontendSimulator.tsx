@@ -71,7 +71,7 @@ export const LiveFrontendSimulator: React.FC<LiveFrontendSimulatorProps> = ({
 
   const popunderAds = activeHomepageAds.filter((a) => a.type === 'popunder' || a.type === 'direct_link');
   const socialBarAds = activeHomepageAds.filter((a) => a.type === 'socialbar');
-  const bannerAds = activeHomepageAds.filter((a) => a.type === 'native_banner' || a.type === 'custom_script' || a.type === 'direct_link');
+  const bannerAds = activeHomepageAds.filter((a) => a.type === 'native_banner');
 
   // Inject real scripts if on web
   useEffect(() => {

@@ -214,6 +214,9 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
   };
 
   const activeAdsCount = adsList.filter((a) => a.enabled).length;
+  const activePopunders = adsList.filter((a) => a.enabled && (a.type === 'popunder' || a.type === 'direct_link'));
+  const activeSocialBars = adsList.filter((a) => a.enabled && a.type === 'socialbar');
+  const activeBanners = adsList.filter((a) => a.enabled && (a.type === 'native_banner' || a.type === 'custom_script'));
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -273,6 +276,146 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
               <Code className="w-4 h-4 text-sky-400" />
               <span>Custom Script</span>
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 🟢 LIVE ACTIVE ADS RADAR BOARD (বর্তমানে কোন কোন অ্যাড সক্রিয় আছে) */}
+      <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-emerald-500/40 dark:border-emerald-500/30 shadow-lg space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-zinc-800">
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex h-3.5 w-3.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500" />
+            </div>
+            <h2 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+              Currently Active Ads Live Status (লাইভ সক্রিয় অ্যাড তালিকা)
+            </h2>
+          </div>
+          <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            {activeAdsCount} Active / {adsList.length} Total Units
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          {/* Active Status 1: Popunder */}
+          <div className={`p-4 rounded-2xl border transition-all ${
+            activePopunders.length > 0
+              ? 'bg-amber-500/10 border-amber-500/40 dark:bg-amber-500/5'
+              : 'bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-xl ${
+                  activePopunders.length > 0 ? 'bg-amber-500 text-slate-950 font-black' : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'
+                }`}>
+                  <Zap className="w-4 h-4 fill-current" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Popunder Ads</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">Opens on user clicks</p>
+                </div>
+              </div>
+              {activePopunders.length > 0 ? (
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold text-[10px] uppercase animate-pulse">
+                  ● ACTIVE ({activePopunders.length})
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-500 text-[10px] font-bold uppercase">
+                  OFF
+                </span>
+              )}
+            </div>
+            {activePopunders.length > 0 && (
+              <div className="mt-2.5 pt-2 border-t border-amber-500/20 text-[11px] space-y-1">
+                {activePopunders.map((ad) => (
+                  <div key={ad.id} className="flex items-center justify-between text-amber-600 dark:text-amber-400 font-mono">
+                    <span className="truncate max-w-[140px] font-semibold">{ad.name}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20">{ad.multiplier || 5}x Parallel</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Active Status 2: Social Bar */}
+          <div className={`p-4 rounded-2xl border transition-all ${
+            activeSocialBars.length > 0
+              ? 'bg-rose-500/10 border-rose-500/40 dark:bg-rose-500/5'
+              : 'bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-xl ${
+                  activeSocialBars.length > 0 ? 'bg-rose-600 text-white font-black' : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'
+                }`}>
+                  <Radio className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Social Bar Ads</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">Floating push bar</p>
+                </div>
+              </div>
+              {activeSocialBars.length > 0 ? (
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold text-[10px] uppercase animate-pulse">
+                  ● ACTIVE ({activeSocialBars.length})
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-500 text-[10px] font-bold uppercase">
+                  OFF
+                </span>
+              )}
+            </div>
+            {activeSocialBars.length > 0 && (
+              <div className="mt-2.5 pt-2 border-t border-rose-500/20 text-[11px] space-y-1">
+                {activeSocialBars.map((ad) => (
+                  <div key={ad.id} className="flex items-center justify-between text-rose-600 dark:text-rose-400 font-mono">
+                    <span className="truncate max-w-[140px] font-semibold">{ad.name}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-rose-500/20">{ad.placement}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Active Status 3: Native Banners */}
+          <div className={`p-4 rounded-2xl border transition-all ${
+            activeBanners.length > 0
+              ? 'bg-sky-500/10 border-sky-500/40 dark:bg-sky-500/5'
+              : 'bg-slate-50 dark:bg-zinc-950 border-slate-200 dark:border-zinc-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-xl ${
+                  activeBanners.length > 0 ? 'bg-sky-600 text-white font-black' : 'bg-slate-200 dark:bg-zinc-800 text-slate-500'
+                }`}>
+                  <Layers className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white">Banner / Custom</h4>
+                  <p className="text-[10px] text-slate-500 dark:text-zinc-400">Native display slots</p>
+                </div>
+              </div>
+              {activeBanners.length > 0 ? (
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-white font-bold text-[10px] uppercase">
+                  ● ACTIVE ({activeBanners.length})
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-zinc-800 text-slate-500 text-[10px] font-bold uppercase">
+                  OFF
+                </span>
+              )}
+            </div>
+            {activeBanners.length > 0 && (
+              <div className="mt-2.5 pt-2 border-t border-sky-500/20 text-[11px] space-y-1">
+                {activeBanners.map((ad) => (
+                  <div key={ad.id} className="flex items-center justify-between text-sky-600 dark:text-sky-400 font-mono">
+                    <span className="truncate max-w-[140px] font-semibold">{ad.name}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20">{ad.placement}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -452,12 +595,13 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
                           <span>{multiplierVal}x Parallel Multiplier (Never Off)</span>
                         </span>
                         {ad.enabled ? (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-bold">
-                            ● CONTINUOUS
+                          <span className="px-3 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 text-[10px] font-black border border-emerald-500/30 flex items-center gap-1 shadow-xs animate-pulse">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            <span>🟢 LIVE ON USER PANEL</span>
                           </span>
                         ) : (
-                          <span className="px-2 py-0.5 rounded-full bg-zinc-500/20 text-zinc-500 text-[10px] font-bold">
-                            PAUSED
+                          <span className="px-2.5 py-0.5 rounded-full bg-zinc-500/20 text-zinc-400 text-[10px] font-bold border border-zinc-500/30">
+                            ⚪ PAUSED / INACTIVE
                           </span>
                         )}
                       </div>

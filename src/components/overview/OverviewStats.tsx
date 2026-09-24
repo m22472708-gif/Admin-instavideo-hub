@@ -350,10 +350,28 @@ export const OverviewStats: React.FC<OverviewStatsProps> = ({
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
-            <span>Popunder (10x) & Social Bar</span>
-            <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-              Home + Video
-            </span>
+            {(() => {
+              const activeAds = (settings.adsterraAds || []).filter((a) => a.enabled);
+              const hasPopunder = activeAds.some((a) => a.type === 'popunder' || a.type === 'direct_link');
+              const hasSocialBar = activeAds.some((a) => a.type === 'socialbar');
+              const hasBanner = activeAds.some((a) => a.type === 'native_banner' || a.type === 'custom_script');
+
+              const labels: string[] = [];
+              if (hasPopunder) labels.push('Popunder');
+              if (hasSocialBar) labels.push('Social Bar');
+              if (hasBanner) labels.push('Banner');
+
+              return (
+                <>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    {labels.length > 0 ? labels.join(' • ') : 'No Ads Running'}
+                  </span>
+                  <span className="font-bold text-slate-700 dark:text-zinc-300 font-mono text-[11px]">
+                    {activeAds.length > 0 ? '🟢 LIVE' : '⚪ OFF'}
+                  </span>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
