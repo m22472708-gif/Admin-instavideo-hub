@@ -3,6 +3,7 @@ import { Video, GeneralSettings } from '../../types';
 import { StorageService } from '../../services/storage';
 import { AdsterraInjector } from '../../utils/adsterraInjector';
 import { getProxyImageUrl, FALLBACK_BANNER_IMAGE_SVG } from '../../utils/bannerAssets';
+import { AdsterraBannerSlot } from '../adsterra/AdsterraBannerSlot';
 import {
   X,
   ExternalLink,
@@ -537,6 +538,16 @@ export const VideoTestModal: React.FC<VideoTestModalProps> = ({
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* Adsterra Sponsored Banner for Video Page */}
+          {activeVideoAds.length > 0 && (
+            <div className="px-4 sm:px-5 pt-2">
+              <AdsterraBannerSlot
+                ad={activeVideoAds.find((a) => a.type === 'native_banner' || a.type === 'custom_script' || a.type === 'direct_link') || activeVideoAds[0]}
+                placementName="Video Stream Sponsor Ad"
+              />
             </div>
           )}
 

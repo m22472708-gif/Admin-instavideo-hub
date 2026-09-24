@@ -29,7 +29,10 @@ import {
   RefreshCw,
   Infinity as InfinityIcon,
   Flame,
+  FlaskConical,
+  ShieldAlert,
 } from 'lucide-react';
+import { AdsterraTesterModal } from './AdsterraTesterModal';
 
 interface AdsterraManagerProps {
   settings: GeneralSettings;
@@ -45,6 +48,7 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
   const { showToast } = useToast();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAd, setEditingAd] = useState<AdsterraAdConfig | null>(null);
+  const [testingAd, setTestingAd] = useState<AdsterraAdConfig | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Form State
@@ -469,7 +473,17 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
                     </div>
 
                     {/* Actions & Switch */}
-                    <div className="flex items-center gap-2 sm:gap-3 shrink-0 self-start lg:self-center">
+                    <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-start lg:self-center">
+                      <button
+                        type="button"
+                        onClick={() => setTestingAd(ad)}
+                        className="flex items-center gap-1 px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-600 dark:text-amber-400 font-bold text-xs border border-amber-500/30 transition-all shadow-xs"
+                        title="Test & Diagnose Script Live"
+                      >
+                        <FlaskConical className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Test & Inspect</span>
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => handleToggleAdStatus(ad)}
@@ -699,6 +713,13 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
             </form>
           </div>
         </div>
+      )}
+      {/* 🔬 5. TEST & INSPECT MODAL */}
+      {testingAd && (
+        <AdsterraTesterModal
+          ad={testingAd}
+          onClose={() => setTestingAd(null)}
+        />
       )}
     </div>
   );

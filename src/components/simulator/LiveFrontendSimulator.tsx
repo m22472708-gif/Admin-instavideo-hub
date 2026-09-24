@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { VideoTestModal } from '../videos/VideoTestModal';
 import { FALLBACK_BANNER_IMAGE_SVG, getProxyImageUrl } from '../../utils/bannerAssets';
+import { AdsterraBannerSlot } from '../adsterra/AdsterraBannerSlot';
 
 interface LiveFrontendSimulatorProps {
   videos: Video[];
@@ -70,6 +71,7 @@ export const LiveFrontendSimulator: React.FC<LiveFrontendSimulatorProps> = ({
 
   const popunderAds = activeHomepageAds.filter((a) => a.type === 'popunder' || a.type === 'direct_link');
   const socialBarAds = activeHomepageAds.filter((a) => a.type === 'socialbar');
+  const bannerAds = activeHomepageAds.filter((a) => a.type === 'native_banner' || a.type === 'custom_script' || a.type === 'direct_link');
 
   // Inject real scripts if on web
   useEffect(() => {
@@ -421,6 +423,13 @@ export const LiveFrontendSimulator: React.FC<LiveFrontendSimulatorProps> = ({
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Adsterra Sponsored Banner Ad Slot on Homepage */}
+            {bannerAds.length > 0 && (
+              <div className="px-4 pt-2">
+                <AdsterraBannerSlot ad={bannerAds[0]} placementName="Homepage Banner Ad" />
               </div>
             )}
 
