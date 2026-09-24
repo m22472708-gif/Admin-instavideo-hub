@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Film,
   Images,
+  TrendingUp,
   Send,
   MonitorPlay,
   Settings,
@@ -26,6 +27,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     { id: 'overview' as ActiveTab, label: 'Overview', icon: LayoutDashboard },
     { id: 'videos' as ActiveTab, label: 'Videos', icon: Film, count: videoCount },
     { id: 'banners' as ActiveTab, label: 'Banners', icon: Images },
+    { id: 'adsterra' as ActiveTab, label: 'Adsterra', icon: TrendingUp },
     { id: 'telegram' as ActiveTab, label: 'Telegram', icon: Send, dot: telegramEnabled },
     { id: 'simulator' as ActiveTab, label: 'Simulator', icon: MonitorPlay },
     { id: 'settings' as ActiveTab, label: 'Settings', icon: Settings },
@@ -33,7 +35,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-zinc-950/95 border-t border-slate-200 dark:border-zinc-800 backdrop-blur-lg shadow-lg safe-area-bottom">
-      <div className="grid grid-cols-6 h-15 items-center px-1">
+      <div className="grid grid-cols-7 h-15 items-center px-1">
         {items.map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
@@ -51,26 +53,26 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             >
               <div className="relative">
                 <Icon
-                  className={`w-4.5 h-4.5 transition-transform ${
+                  className={`w-4 h-4 transition-transform ${
                     isActive ? 'scale-110' : ''
                   }`}
                 />
                 {item.count !== undefined && item.count > 0 && (
-                  <span className="absolute -top-1.5 -right-2 px-1 py-0.2 bg-rose-600 text-[9px] font-mono text-white rounded-full leading-tight">
+                  <span className="absolute -top-1.5 -right-2 px-1 py-0.2 bg-rose-600 text-[8px] font-mono text-white rounded-full leading-tight">
                     {item.count > 99 ? '99+' : item.count}
                   </span>
                 )}
                 {item.dot && (
-                  <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-sky-500 ring-1 ring-zinc-950" />
+                  <span className="absolute -top-0.5 -right-1 w-1.5 h-1.5 rounded-full bg-sky-500 ring-1 ring-zinc-950" />
                 )}
               </div>
-              <span className="text-[10px] tracking-tight mt-0.5 truncate max-w-[50px]">
+              <span className="text-[9px] tracking-tight mt-0.5 truncate max-w-[46px]">
                 {item.label}
               </span>
 
               {/* Active indicator bar */}
               {isActive && (
-                <div className="absolute top-0 left-3 right-3 h-0.5 bg-rose-600 dark:bg-rose-500 rounded-full" />
+                <div className="absolute top-0 left-2 right-2 h-0.5 bg-rose-600 dark:bg-rose-500 rounded-full" />
               )}
             </button>
           );

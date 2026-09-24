@@ -28,7 +28,7 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
   const [channelUrl, setChannelUrl] = useState(settings.telegramChannelUrl);
   const [popupTitle, setPopupTitle] = useState(settings.telegramPopupTitle);
   const [popupDescription, setPopupDescription] = useState(settings.telegramPopupDescription);
-  const [delaySec, setDelaySec] = useState<number>(settings.telegramPopupDelaySec || 4);
+  const [delaySec, setDelaySec] = useState<number | string>(settings.telegramPopupDelaySec || 4);
   const [enabled, setEnabled] = useState<boolean>(settings.telegramPopupEnabled ?? true);
   const [siteName, setSiteName] = useState(settings.siteName || 'StreamPulse');
   const [isSaving, setIsSaving] = useState(false);
@@ -217,7 +217,7 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
                   <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
                     Popup Delay
                   </label>
-                  <span className="font-mono text-xs font-bold text-sky-500">{delaySec} seconds</span>
+                  <span className="font-mono text-xs font-bold text-sky-500">{delaySec || 1} seconds</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <input
@@ -225,8 +225,8 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
                     min="1"
                     max="15"
                     step="1"
-                    value={delaySec}
-                    onChange={(e) => setDelaySec(parseInt(e.target.value))}
+                    value={Number(delaySec) || 1}
+                    onChange={(e) => setDelaySec(parseInt(e.target.value, 10))}
                     className="flex-1 accent-sky-500 cursor-pointer"
                   />
                   <input
@@ -234,7 +234,20 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
                     min="1"
                     max="60"
                     value={delaySec}
-                    onChange={(e) => setDelaySec(Math.max(1, parseInt(e.target.value) || 1))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setDelaySec('');
+                      } else {
+                        const num = parseInt(val, 10);
+                        setDelaySec(isNaN(num) ? '' : num);
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!delaySec || Number(delaySec) < 1) {
+                        setDelaySec(1);
+                      }
+                    }}
                     className="w-16 px-2 py-1.5 rounded-lg bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 font-mono text-xs text-center text-slate-900 dark:text-white focus:outline-none"
                   />
                 </div>

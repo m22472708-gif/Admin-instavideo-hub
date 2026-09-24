@@ -21,6 +21,7 @@ import {
 } from 'firebase/database';
 import { Video, Banner, GeneralSettings } from '../types';
 import { StorageService } from './storage';
+import { FALLBACK_BANNER_IMAGE_SVG } from '../utils/bannerAssets';
 
 export const firebaseConfig = {
   apiKey: "AIzaSyD_zTfT_3SCTCMMtb2yROaKHREPfGdk57g",
@@ -62,6 +63,11 @@ export const DEFAULT_SETTINGS: GeneralSettings = {
   telegramPopupEnabled: true,
   siteName: 'StreamPulse',
   adminPin: '1234',
+  unlockAdEnabled: true,
+  unlockAdUrl: 'https://example.com/ads',
+  unlockAdRequiredClicks: 3,
+  unlockAdWaitSeconds: 10,
+  unlockAdButtonText: 'Unlock Video (Watch Ads to Play)',
 };
 
 // Universal Parser: converts any userpanel / database video format to standard Video
@@ -125,15 +131,17 @@ export function parseBannerData(id: string, data: any): Banner {
       ? data.enabled
       : data.status === 'active' || data.status === undefined;
 
+  const rawUrl =
+    data.imageUrl ||
+    data.image ||
+    data.bannerUrl ||
+    data.bannerImage ||
+    data.url ||
+    '';
+
   return {
     id: id || data.id,
-    imageUrl:
-      data.imageUrl ||
-      data.image ||
-      data.bannerUrl ||
-      data.bannerImage ||
-      data.url ||
-      '',
+    imageUrl: rawUrl.trim(),
     targetLink:
       data.targetLink ||
       data.link ||
@@ -190,6 +198,38 @@ export function parseSettingsData(data: any): GeneralSettings {
     logoUrl: data.logoUrl || data.logo || data.siteLogo || DEFAULT_SETTINGS.logoUrl || '',
     tagline: data.tagline || data.siteTagline || data.subTitle || data.subtitle || DEFAULT_SETTINGS.tagline || '',
     adminPin: data.adminPin || DEFAULT_SETTINGS.adminPin,
+    unlockAdEnabled:
+      typeof data.unlockAdEnabled === 'boolean'
+        ? data.unlockAdEnabled
+        : typeof data.adEnabled === 'boolean'
+        ? data.adEnabled
+        : DEFAULT_SETTINGS.unlockAdEnabled,
+    unlockAdUrl:
+      data.unlockAdUrl ||
+      data.adUrl ||
+      data.adsUrl ||
+      data.adLink ||
+      DEFAULT_SETTINGS.unlockAdUrl,
+    unlockAdRequiredClicks:
+      typeof data.unlockAdRequiredClicks === 'number'
+        ? data.unlockAdRequiredClicks
+        : typeof data.adClicks === 'number'
+        ? data.adClicks
+        : typeof data.requiredClicks === 'number'
+        ? data.requiredClicks
+        : DEFAULT_SETTINGS.unlockAdRequiredClicks,
+    unlockAdWaitSeconds:
+      typeof data.unlockAdWaitSeconds === 'number'
+        ? data.unlockAdWaitSeconds
+        : typeof data.adWaitSeconds === 'number'
+        ? data.adWaitSeconds
+        : typeof data.waitSeconds === 'number'
+        ? data.waitSeconds
+        : DEFAULT_SETTINGS.unlockAdWaitSeconds,
+    unlockAdButtonText:
+      data.unlockAdButtonText ||
+      data.adButtonText ||
+      DEFAULT_SETTINGS.unlockAdButtonText,
   };
 }
 
@@ -916,6 +956,19 @@ export const FirebaseService = {
       tagline: merged.tagline || '',
       subtitle: merged.tagline || '',
       adminPin: merged.adminPin,
+      // Video Unlock & Ads Configuration
+      unlockAdEnabled: Boolean(merged.unlockAdEnabled),
+      adEnabled: Boolean(merged.unlockAdEnabled),
+      unlockAdUrl: merged.unlockAdUrl || '',
+      adUrl: merged.unlockAdUrl || '',
+      unlockAdRequiredClicks: Number(merged.unlockAdRequiredClicks) || 3,
+      adClicks: Number(merged.unlockAdRequiredClicks) || 3,
+      requiredClicks: Number(merged.unlockAdRequiredClicks) || 3,
+      unlockAdWaitSeconds: Number(merged.unlockAdWaitSeconds) || 10,
+      adWaitSeconds: Number(merged.unlockAdWaitSeconds) || 10,
+      waitSeconds: Number(merged.unlockAdWaitSeconds) || 10,
+      unlockAdButtonText: merged.unlockAdButtonText || 'Unlock Video (Watch Ads to Play)',
+      adButtonText: merged.unlockAdButtonText || 'Unlock Video (Watch Ads to Play)',
       updatedAt: Date.now(),
     };
 

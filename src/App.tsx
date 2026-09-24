@@ -13,6 +13,7 @@ import { VideoManager } from './components/videos/VideoManager';
 import { BannerManager } from './components/banners/BannerManager';
 import { TelegramManager } from './components/telegram/TelegramManager';
 import { LiveFrontendSimulator } from './components/simulator/LiveFrontendSimulator';
+import { AdsterraManager } from './components/adsterra/AdsterraManager';
 import { SystemSettings } from './components/settings/SystemSettings';
 import { VideoFormModal } from './components/videos/VideoFormModal';
 import { BannerFormModal } from './components/banners/BannerFormModal';
@@ -41,13 +42,49 @@ function DashboardContent() {
 
   // Real-time direct synchronization with Firebase (Firestore + Realtime Database)
   useEffect(() => {
-    // One-time cleanup for old demo category arrays
+    // One-time cleanup for old demo category arrays and demo banners
+    const isDemoBanner = (b: any): boolean => {
+      if (!b) return false;
+      const id = String(b.id || '');
+      if (id === 'b-1' || id === 'b-2' || id === 'b-3' || id === 'b-4' || id.startsWith('banner-seed-')) {
+        return true;
+      }
+      const title = String(b.title || '').toLowerCase();
+      if (
+        title.includes('cyber tokyo') ||
+        title.includes('shadow strike') ||
+        title.includes('nadir pare') ||
+        title.includes('echoes of the cosmos') ||
+        title.includes('cyber neon city') ||
+        title.includes('action blockbuster night') ||
+        title.includes('crimson cinema horizon') ||
+        title.includes('interstellar deep galaxy') ||
+        title.includes('anime studio fantasy') ||
+        title.includes('neon wave cinema')
+      ) {
+        return true;
+      }
+      return false;
+    };
+
     try {
-      const stored = localStorage.getItem('streampulse_categories');
-      if (stored) {
-        const parsed = JSON.parse(stored);
+      const storedCategories = localStorage.getItem('streampulse_categories');
+      if (storedCategories) {
+        const parsed = JSON.parse(storedCategories);
         if (Array.isArray(parsed) && (parsed.includes('Trailers') || parsed.includes('Anime') || parsed.includes('Movies'))) {
           localStorage.setItem('streampulse_categories', JSON.stringify([]));
+        }
+      }
+
+      const storedBanners = localStorage.getItem('streampulse_banners');
+      if (storedBanners) {
+        const parsedBanners = JSON.parse(storedBanners);
+        if (Array.isArray(parsedBanners)) {
+          const freshOnly = parsedBanners.filter((b) => !isDemoBanner(b));
+          if (freshOnly.length !== parsedBanners.length) {
+            localStorage.setItem('streampulse_banners', JSON.stringify(freshOnly));
+            setBanners(freshOnly);
+          }
         }
       }
     } catch {
@@ -72,9 +109,18 @@ function DashboardContent() {
     // 2. Subscribe to 'banners' collection / path
     const unsubscribeBanners = FirebaseService.subscribeToBanners(
       (remoteBanners) => {
-        setBanners(remoteBanners);
+        // Auto-purge any demo banners that might have been synced previously
+        const demoBanners = remoteBanners.filter(isDemoBanner);
+        if (demoBanners.length > 0) {
+          demoBanners.forEach((db) => {
+            FirebaseService.deleteBanner(db.id);
+          });
+        }
+
+        const freshBanners = remoteBanners.filter((b) => !isDemoBanner(b));
+        setBanners(freshBanners);
         try {
-          localStorage.setItem('streampulse_banners', JSON.stringify(remoteBanners));
+          localStorage.setItem('streampulse_banners', JSON.stringify(freshBanners));
         } catch {
           // ignore
         }
@@ -143,14 +189,14 @@ function DashboardContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors duration-200">
+    <div className="min-h-screen md:h-screen w-full bg-slate-100 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 transition-colors duration-200 flex flex-col md:overflow-hidden">
       {/* Admin PIN Lock Screen */}
       {!isAuthenticated && (
         <PinAuthModal onAuthenticated={() => setIsAuthenticated(true)} />
       )}
 
       {/* Main Admin Portal App */}
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex flex-1 min-h-screen md:min-h-0 md:h-full relative md:overflow-hidden">
         {/* Responsive Sidebar */}
         <Sidebar
           activeTab={activeTab}
@@ -164,7 +210,7 @@ function DashboardContent() {
         />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col md:pl-64 overflow-hidden">
+        <div className="flex-1 flex flex-col md:pl-64 min-w-0 w-full min-h-screen md:min-h-0 md:h-full">
           {/* Header */}
           <Header
             activeTab={activeTab}
@@ -174,8 +220,8 @@ function DashboardContent() {
           />
 
           {/* Scrollable Body */}
-          <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 pb-24 md:pb-8 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-zinc-800">
-            <div className="max-w-7xl mx-auto">
+          <main className="flex-1 w-full overflow-y-auto p-3.5 sm:p-5 md:p-8 pb-28 md:pb-8 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-zinc-800 bg-slate-100 dark:bg-zinc-950">
+            <div className="max-w-7xl mx-auto space-y-6">
               {activeTab === 'overview' && (
                 <OverviewStats
                   videos={videos}
@@ -190,6 +236,7 @@ function DashboardContent() {
               {activeTab === 'videos' && (
                 <VideoManager
                   videos={videos}
+                  settings={settings}
                   onRefresh={refreshData}
                   onDeleteSuccess={handleDeleteVideoImmediate}
                 />
@@ -200,6 +247,14 @@ function DashboardContent() {
                   banners={banners}
                   onRefresh={refreshData}
                   onDeleteSuccess={handleDeleteBannerImmediate}
+                />
+              )}
+
+              {activeTab === 'adsterra' && (
+                <AdsterraManager
+                  settings={settings}
+                  onRefresh={refreshData}
+                  onOpenSimulator={() => setActiveTab('simulator')}
                 />
               )}
 

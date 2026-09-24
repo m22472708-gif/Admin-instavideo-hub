@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Banner } from '../../types';
 import { FirebaseService } from '../../services/firebase';
+import { StorageService } from '../../services/storage';
 import { useToast } from '../../context/ToastContext';
 import { BannerFormModal } from './BannerFormModal';
+import {
+  FALLBACK_BANNER_IMAGE_SVG,
+  sanitizeBannerUrl,
+  getProxyImageUrl,
+} from '../../utils/bannerAssets';
 import {
   Images,
   Plus,
@@ -18,6 +24,8 @@ import {
   Link,
   Eye,
   EyeOff,
+  RotateCcw,
+  Wrench,
 } from 'lucide-react';
 
 interface BannerManagerProps {
@@ -101,6 +109,29 @@ export const BannerManager: React.FC<BannerManagerProps> = ({ banners, onRefresh
     setIsFormOpen(true);
   };
 
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+
+  const handleClearAllBanners = async () => {
+    setIsClearingAll(true);
+    try {
+      for (const b of banners) {
+        await FirebaseService.deleteBanner(b.id);
+      }
+      StorageService.saveBanners([]);
+      showSuccessToast(
+        'All Banners Cleared',
+        'Banner database is now 100% clean and fresh. No demo banners remain.'
+      );
+      setIsClearModalOpen(false);
+      onRefresh();
+    } catch (err: any) {
+      showErrorToast('Clear Notice', err?.message || 'Failed to clear all banners');
+    } finally {
+      setIsClearingAll(false);
+    }
+  };
+
   const currentHeroBanner = activeBanners[previewIndex] || activeBanners[0];
 
   return (
@@ -117,19 +148,33 @@ export const BannerManager: React.FC<BannerManagerProps> = ({ banners, onRefresh
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleOpenAdd}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-semibold uppercase tracking-wider shadow-lg shadow-rose-950/40 transition-all self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4 stroke-[2.5]" />
-          Add Picture Banner
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {banners.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setIsClearModalOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold border border-rose-500/20 transition-all"
+              title="Delete all banners to keep everything fresh"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Clear All (Wipe Fresh)</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={handleOpenAdd}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white text-xs font-semibold uppercase tracking-wider shadow-lg shadow-rose-950/40 transition-all"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            Add Picture Banner
+          </button>
+        </div>
       </div>
 
       {/* PICTURE-ONLY LIVE CAROUSEL SIMULATOR (NO TITLES / NO SUBTITLES / NO BUTTONS) */}
       {activeBanners.length > 0 && currentHeroBanner && (
-        <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-xl bg-black group">
+        <div className="relative rounded-3xl overflow-hidden border border-slate-200 dark:border-zinc-800 shadow-xl bg-gradient-to-r from-rose-950/90 via-zinc-900 to-indigo-950/90 group">
           {/* Header indicator bar */}
           <div className="absolute top-3 left-3 z-20 flex items-center gap-2">
             <span className="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase bg-black/70 text-emerald-400 border border-emerald-500/30 backdrop-blur-md flex items-center gap-1.5 shadow-md">
@@ -147,11 +192,18 @@ export const BannerManager: React.FC<BannerManagerProps> = ({ banners, onRefresh
           {/* Picture Slide Display */}
           <div className="relative aspect-[16/8] sm:aspect-[21/8] md:aspect-[24/8] w-full overflow-hidden">
             <img
-              src={currentHeroBanner.imageUrl}
+              src={currentHeroBanner.imageUrl || FALLBACK_BANNER_IMAGE_SVG}
               alt="Live picture banner"
+              referrerPolicy="no-referrer"
               className="w-full h-full object-cover transition-all duration-700 select-none"
               onError={(e) => {
-                (e.target as HTMLElement).style.display = 'none';
+                const target = e.currentTarget;
+                const orig = currentHeroBanner.imageUrl;
+                if (orig && !target.src.includes('wsrv.nl') && !orig.startsWith('data:') && target.src !== FALLBACK_BANNER_IMAGE_SVG) {
+                  target.src = getProxyImageUrl(orig);
+                } else if (target.src !== FALLBACK_BANNER_IMAGE_SVG) {
+                  target.src = FALLBACK_BANNER_IMAGE_SVG;
+                }
               }}
             />
 
@@ -249,13 +301,20 @@ export const BannerManager: React.FC<BannerManagerProps> = ({ banners, onRefresh
             }`}
           >
             {/* Pure Picture Banner Preview */}
-            <div className="relative aspect-[21/9] bg-black overflow-hidden">
+            <div className="relative aspect-[21/9] bg-gradient-to-r from-rose-950/80 via-zinc-900 to-purple-950/80 overflow-hidden">
               <img
-                src={banner.imageUrl}
+                src={banner.imageUrl || FALLBACK_BANNER_IMAGE_SVG}
                 alt={`Picture banner slide ${index + 1}`}
+                referrerPolicy="no-referrer"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
+                  const target = e.currentTarget;
+                  const orig = banner.imageUrl;
+                  if (orig && !target.src.includes('wsrv.nl') && !orig.startsWith('data:') && target.src !== FALLBACK_BANNER_IMAGE_SVG) {
+                    target.src = getProxyImageUrl(orig);
+                  } else if (target.src !== FALLBACK_BANNER_IMAGE_SVG) {
+                    target.src = FALLBACK_BANNER_IMAGE_SVG;
+                  }
                 }}
               />
 
@@ -413,6 +472,43 @@ export const BannerManager: React.FC<BannerManagerProps> = ({ banners, onRefresh
                 className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 shadow-md shadow-rose-950/40 transition-all"
               >
                 {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Banners Modal */}
+      {isClearModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-sm p-4 flex justify-center items-start sm:items-center pt-12 sm:pt-4">
+          <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 my-auto">
+            <div className="w-12 h-12 rounded-2xl bg-rose-600/20 text-rose-500 flex items-center justify-center mb-4 border border-rose-500/30">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-base font-bold text-white tracking-tight">
+              Wipe All Banners (Fresh Slate)?
+            </h3>
+            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+              Are you sure you want to delete all {banners.length} banners? This will permanently remove them from Firestore, Realtime Database, and local cache so your slider is 100% fresh.
+            </p>
+
+            <div className="mt-6 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsClearModalOpen(false)}
+                disabled={isClearingAll}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleClearAllBanners}
+                disabled={isClearingAll}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 shadow-md shadow-rose-950/40 transition-all"
+              >
+                {isClearingAll ? 'Clearing...' : 'Yes, Delete All'}
               </button>
             </div>
           </div>

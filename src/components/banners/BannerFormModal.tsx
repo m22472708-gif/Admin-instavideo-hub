@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Banner } from '../../types';
 import { FirebaseService } from '../../services/firebase';
 import { useToast } from '../../context/ToastContext';
-import { X, Image as ImageIcon, Sparkles, Link, Upload, ArrowLeft, Check, AlertCircle } from 'lucide-react';
+import { FALLBACK_BANNER_IMAGE_SVG, sanitizeBannerUrl, getProxyImageUrl } from '../../utils/bannerAssets';
+import { X, Image as ImageIcon, Sparkles, Link, Upload, ArrowLeft, Check, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface BannerFormModalProps {
   bannerToEdit?: Banner | null;
@@ -10,13 +11,6 @@ interface BannerFormModalProps {
   onClose: () => void;
   onSaved: (banner: Banner) => void;
 }
-
-const SAMPLE_BANNER_IMAGES = [
-  { label: 'Cyber Tokyo', url: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1600&q=80' },
-  { label: 'Action Cinema', url: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1600&q=80' },
-  { label: 'Deep Space', url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1600&q=80' },
-  { label: 'Coastal Cinema', url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1600&q=80' },
-];
 
 export const BannerFormModal: React.FC<BannerFormModalProps> = ({
   bannerToEdit,
@@ -33,15 +27,51 @@ export const BannerFormModal: React.FC<BannerFormModalProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [triedProxy, setTriedProxy] = useState(false);
 
   if (!isOpen) return null;
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showErrorToast('Invalid file', 'Please select a valid image file (JPG, PNG, WebP).');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showErrorToast('File too large', 'Please choose an image under 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setImageUrl(reader.result);
+        setImageLoadFailed(false);
+        setTriedProxy(false);
+        setErrors((prev) => ({ ...prev, imageUrl: '' }));
+        showSuccessToast('Image Loaded', 'Local image file loaded successfully.');
+      }
+    };
+    reader.onerror = () => {
+      showErrorToast('Upload Error', 'Failed to read image file.');
+    };
+    reader.readAsDataURL(file);
+  };
+
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
-    if (!imageUrl.trim()) {
-      newErrors.imageUrl = 'Banner Image URL is required';
-    } else if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-      newErrors.imageUrl = 'Image URL must begin with http:// or https://';
+    const trimmed = sanitizeBannerUrl(imageUrl);
+    if (!trimmed) {
+      newErrors.imageUrl = 'Banner image link (URL) is required';
+    } else if (
+      !trimmed.startsWith('http://') &&
+      !trimmed.startsWith('https://') &&
+      !trimmed.startsWith('data:image/')
+    ) {
+      newErrors.imageUrl = 'Please enter a valid image link (e.g. https://.../image.jpg)';
     }
 
     setErrors(newErrors);
@@ -54,9 +84,15 @@ export const BannerFormModal: React.FC<BannerFormModalProps> = ({
 
     setIsSubmitting(true);
     try {
+      let cleanImageUrl = sanitizeBannerUrl(imageUrl.trim());
+      // If the direct link failed but proxy succeeded, save proxied URL for guaranteed live rendering
+      if (triedProxy && !cleanImageUrl.startsWith('data:') && !cleanImageUrl.includes('wsrv.nl')) {
+        cleanImageUrl = getProxyImageUrl(cleanImageUrl);
+      }
+
       const saved = await FirebaseService.saveBanner({
         id: bannerToEdit?.id,
-        imageUrl: imageUrl.trim(),
+        imageUrl: cleanImageUrl,
         targetLink: targetLink.trim(),
         active,
       });
@@ -120,85 +156,90 @@ export const BannerFormModal: React.FC<BannerFormModalProps> = ({
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
           {/* Scrollable Body */}
           <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
-            {/* Direct Image URL input */}
+            {/* Direct Image URL & Device Upload */}
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <label className="block text-xs font-semibold text-zinc-200">
-                  Banner Image URL <span className="text-rose-400">*</span>
+                  Banner Image URL (ছবির লিঙ্ক) <span className="text-rose-400">*</span>
                 </label>
-                <span className="text-[10px] text-zinc-400">Direct picture link (16:9 or 21:9)</span>
+                <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-xs font-semibold cursor-pointer border border-zinc-700 transition-colors">
+                  <Upload className="w-3.5 h-3.5 text-rose-400" />
+                  <span>ডিভাইস থেকে ফাইল নির্বাচন (ঐচ্ছিক)</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
               </div>
 
               <div className="relative">
                 <input
-                  type="url"
+                  type="text"
                   value={imageUrl}
                   onChange={(e) => {
-                    setImageUrl(e.target.value);
+                    const raw = e.target.value;
+                    const sanitized = sanitizeBannerUrl(raw);
+                    setImageUrl(sanitized || raw);
                     setImageLoadFailed(false);
+                    setTriedProxy(false);
+                    if (errors.imageUrl) {
+                      setErrors((prev) => ({ ...prev, imageUrl: '' }));
+                    }
                   }}
-                  placeholder="https://images.unsplash.com/... or CDN image URL"
+                  placeholder="https://... (ছবির ডিরেক্ট লিঙ্ক পেস্ট করুন, যেমন: .jpg, .png, .webp)"
                   className={`w-full pl-9 pr-3 py-2.5 rounded-xl bg-zinc-950 border font-mono text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all ${
                     errors.imageUrl ? 'border-rose-500 ring-1 ring-rose-500' : 'border-zinc-800'
                   }`}
-                  required
                 />
                 <ImageIcon className="w-4 h-4 text-zinc-500 absolute left-3 top-3" />
               </div>
+              
+              {/* Helpful Tips for Links */}
+              <div className="text-[11px] text-zinc-400 flex items-start gap-1.5 bg-zinc-950/60 p-2 rounded-lg border border-zinc-800/60">
+                <span className="shrink-0 text-amber-400">💡</span>
+                <span>
+                  <b>পরামর্শ:</b> যেকোনো ওয়েবসাইটের ছবির ওপর রাইট-ক্লিক করে <b>&quot;Copy Image Address&quot;</b> (বা মোবাইল ব্রাউজারে ছবির ওপর চাপ দিয়ে ধরে রেখে &quot;Copy Image Link&quot;) কপি করে এখানে পেস্ট করুন।
+                </span>
+              </div>
+
               {errors.imageUrl && (
                 <p className="text-[11px] text-rose-400 flex items-center gap-1">
                   <AlertCircle className="w-3 h-3" /> {errors.imageUrl}
                 </p>
               )}
 
-              {/* Presets Quick Fill */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                <span className="text-[10px] text-zinc-500 mr-1 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-amber-400" /> Presets:
-                </span>
-                {SAMPLE_BANNER_IMAGES.map((img) => (
-                  <button
-                    key={img.label}
-                    type="button"
-                    onClick={() => {
-                      setImageUrl(img.url);
-                      setImageLoadFailed(false);
-                    }}
-                    className="px-2 py-0.5 rounded text-[10px] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
-                  >
-                    {img.label}
-                  </button>
-                ))}
-              </div>
-
               {/* Picture-Only Live Visual Preview */}
               <div className="space-y-1.5 pt-2">
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-zinc-400 font-medium">Live Visual Preview (Picture-Only)</span>
-                  <span className="text-emerald-400 font-mono text-[10px]">No Text / No Buttons</span>
+                  <span className="text-zinc-400 font-medium">Live Visual Preview (ব্যানার প্রিভিউ)</span>
+                  <span className="text-emerald-400 font-mono text-[10px]">Picture-Only</span>
                 </div>
 
-                <div className="relative aspect-[21/9] sm:aspect-[24/9] w-full rounded-xl overflow-hidden border border-zinc-800 bg-black shadow-inner">
+                <div className="relative aspect-[21/9] sm:aspect-[24/9] w-full rounded-xl overflow-hidden border border-zinc-800 bg-zinc-950 shadow-inner">
                   {imageUrl ? (
                     <img
                       src={imageUrl}
                       alt="Banner visual preview"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover"
                       onLoad={() => setImageLoadFailed(false)}
-                      onError={() => setImageLoadFailed(true)}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const clean = sanitizeBannerUrl(imageUrl);
+                        if (!triedProxy && clean && !clean.startsWith('data:') && !clean.includes('wsrv.nl')) {
+                          setTriedProxy(true);
+                          target.src = getProxyImageUrl(clean);
+                        } else {
+                          setImageLoadFailed(true);
+                        }
+                      }}
                     />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-zinc-600 text-xs">
-                      <ImageIcon className="w-8 h-8 mb-1 opacity-40" />
-                      <span>Enter direct image URL above to preview</span>
-                    </div>
-                  )}
-
-                  {imageLoadFailed && (
-                    <div className="absolute inset-0 bg-zinc-950/90 flex flex-col items-center justify-center p-4 text-center text-amber-400 text-xs">
-                      <AlertCircle className="w-6 h-6 mb-1" />
-                      <span>Unable to load image from this URL</span>
-                      <span className="text-[10px] text-zinc-400 mt-0.5">Please check direct link or CORS access</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 text-xs">
+                      <ImageIcon className="w-8 h-8 mb-1 text-zinc-600 opacity-60" />
+                      <span>উপরে ছবির লিঙ্ক (URL) পেস্ট করলেই প্রিভিউ ভেসে উঠবে</span>
                     </div>
                   )}
 
@@ -216,6 +257,34 @@ export const BannerFormModal: React.FC<BannerFormModalProps> = ({
                     </span>
                   </div>
                 </div>
+
+                {imageLoadFailed && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+                      <div>
+                        <p className="font-semibold text-rose-200">লিঙ্ক থেকে ছবি সরাসরি আসছে না (CORS / Hotlink Protection)</p>
+                        <p className="text-[11px] text-zinc-300 mt-0.5">
+                          এই ওয়েবসাইটটি ছবির ডিরেক্ট ভিউ আটকে রেখেছে। নিচের বাটনে চাপ দিন, ক্লাউড প্রক্সি দিয়ে তৎক্ষণাৎ আনব্লক হয়ে যাবে:
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const clean = sanitizeBannerUrl(imageUrl);
+                        const proxied = getProxyImageUrl(clean);
+                        setImageUrl(proxied);
+                        setTriedProxy(true);
+                        setImageLoadFailed(false);
+                      }}
+                      className="shrink-0 px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>প্রক্সি দিয়ে ছবি আনলক করুন</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

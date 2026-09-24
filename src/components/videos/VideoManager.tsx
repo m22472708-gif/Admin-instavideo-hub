@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Video, VideoCategory, DEFAULT_CATEGORIES } from '../../types';
+import { Video, VideoCategory, DEFAULT_CATEGORIES, GeneralSettings } from '../../types';
 import { FirebaseService } from '../../services/firebase';
 import { StorageService } from '../../services/storage';
 import { useToast } from '../../context/ToastContext';
 import { VideoFormModal } from './VideoFormModal';
 import { VideoTestModal } from './VideoTestModal';
 import { CategoryManagerModal } from './CategoryManagerModal';
+import { getProxyImageUrl, FALLBACK_BANNER_IMAGE_SVG } from '../../utils/bannerAssets';
 import {
   Film,
   Search,
@@ -28,11 +29,17 @@ import {
 
 interface VideoManagerProps {
   videos: Video[];
+  settings?: GeneralSettings;
   onRefresh: () => void;
   onDeleteSuccess?: (id: string) => void;
 }
 
-export const VideoManager: React.FC<VideoManagerProps> = ({ videos, onRefresh, onDeleteSuccess }) => {
+export const VideoManager: React.FC<VideoManagerProps> = ({
+  videos,
+  settings,
+  onRefresh,
+  onDeleteSuccess,
+}) => {
   const { showSuccessToast, showErrorToast } = useToast();
 
   // Dynamic Categories state
@@ -302,11 +309,15 @@ export const VideoManager: React.FC<VideoManagerProps> = ({ videos, onRefresh, o
                       <div className="flex items-center gap-3">
                         <div className="relative w-16 h-10 rounded-lg overflow-hidden shrink-0 bg-zinc-950 border border-slate-200 dark:border-zinc-800">
                           <img
-                            src={video.thumbnailUrl}
+                            src={getProxyImageUrl(video.thumbnailUrl)}
                             alt={video.title}
+                            referrerPolicy="no-referrer"
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             onError={(e) => {
-                              (e.target as HTMLElement).style.display = 'none';
+                              const target = e.currentTarget;
+                              if (target.src !== FALLBACK_BANNER_IMAGE_SVG) {
+                                target.src = FALLBACK_BANNER_IMAGE_SVG;
+                              }
                             }}
                           />
                         </div>
@@ -412,11 +423,15 @@ export const VideoManager: React.FC<VideoManagerProps> = ({ videos, onRefresh, o
               {/* Poster Frame */}
               <div className="relative aspect-video bg-black overflow-hidden">
                 <img
-                  src={video.thumbnailUrl}
+                  src={getProxyImageUrl(video.thumbnailUrl)}
                   alt={video.title}
+                  referrerPolicy="no-referrer"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
+                    const target = e.currentTarget;
+                    if (target.src !== FALLBACK_BANNER_IMAGE_SVG) {
+                      target.src = FALLBACK_BANNER_IMAGE_SVG;
+                    }
                   }}
                 />
 
@@ -531,7 +546,12 @@ export const VideoManager: React.FC<VideoManagerProps> = ({ videos, onRefresh, o
 
       {/* Video Stream Tester Modal */}
       {testingVideo && (
-        <VideoTestModal video={testingVideo} onClose={() => setTestingVideo(null)} />
+        <VideoTestModal
+          video={testingVideo}
+          settings={settings}
+          isAdminPreview={true}
+          onClose={() => setTestingVideo(null)}
+        />
       )}
 
       {/* Delete Confirmation Modal */}
