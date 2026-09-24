@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Videos collection: public can read, increment views/likes, or write
+    match /videos/{videoId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Hero banners: public can read
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Settings (general Telegram config & site info): public can read
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Fallback default deny for any unknown collection
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

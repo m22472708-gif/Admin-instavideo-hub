@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "Video": {
+      "title": "Video",
+      "description": "Video stream entry with thumbnail, direct stream link, and metrics",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "duration": { "type": "string", "maxLength": 20 },
+        "category": { "type": "string", "maxLength": 50 },
+        "thumbnailUrl": { "type": "string", "maxLength": 1000 },
+        "directLink": { "type": "string", "maxLength": 1000 },
+        "views": { "type": "number" },
+        "likes": { "type": "number" },
+        "description": { "type": "string", "maxLength": 2000 },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "title", "thumbnailUrl", "directLink", "category"]
+    },
+    "Banner": {
+      "title": "Banner",
+      "description": "Hero banner slide for the frontpage carousel",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string", "maxLength": 200 },
+        "subtitle": { "type": "string", "maxLength": 500 },
+        "imageUrl": { "type": "string", "maxLength": 1000 },
+        "badge": { "type": "string", "maxLength": 50 },
+        "active": { "type": "boolean" },
+        "targetLink": { "type": "string", "maxLength": 1000 }
+      },
+      "required": ["id", "title", "imageUrl", "active"]
+    },
+    "GeneralSettings": {
+      "title": "GeneralSettings",
+      "description": "Global settings for Telegram popup and site details",
+      "type": "object",
+      "properties": {
+        "siteName": { "type": "string", "maxLength": 100 },
+        "telegramChannelUrl": { "type": "string", "maxLength": 500 },
+        "telegramPopupTitle": { "type": "string", "maxLength": 200 },
+        "telegramPopupDescription": { "type": "string", "maxLength": 1000 },
+        "telegramPopupDelaySec": { "type": "number" },
+        "telegramPopupEnabled": { "type": "boolean" }
+      },
+      "required": ["siteName", "telegramChannelUrl"]
+    }
+  },
+  "firestore": {
+    "/videos/{videoId}": {
+      "schema": "Video",
+      "description": "All available stream videos"
+    },
+    "/banners/{bannerId}": {
+      "schema": "Banner",
+      "description": "Frontpage hero banner slides"
+    },
+    "/settings/general": {
+      "schema": "GeneralSettings",
+      "description": "Global streaming platform settings"
+    }
+  }
+}

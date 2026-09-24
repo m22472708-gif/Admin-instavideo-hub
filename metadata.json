@@ -1,0 +1,7 @@
+{
+  "name": "StreamPulse Admin Portal",
+  "description": "Dedicated secure admin dashboard for StreamPulse Cinema & Video Streaming Platform to manage videos, banners, and Telegram modal configurations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
