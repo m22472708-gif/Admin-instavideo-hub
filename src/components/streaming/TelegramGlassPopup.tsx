@@ -41,7 +41,8 @@ export const TelegramGlassPopup: React.FC<TelegramGlassPopupProps> = ({
       return;
     }
 
-    const delayMs = (settings.telegramPopupDelaySec || 4) * 1000;
+    const safeDelaySec = Math.max(1, Number(settings.telegramPopupDelaySec) || 4);
+    const delayMs = safeDelaySec * 1000;
     const timer = setTimeout(() => {
       setInternalVisible(true);
     }, delayMs);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GeneralSettings } from '../../types';
 import { FirebaseService } from '../../services/firebase';
 import { useToast } from '../../context/ToastContext';
@@ -31,7 +31,9 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
   const [channelUrl, setChannelUrl] = useState(settings.telegramChannelUrl);
   const [popupTitle, setPopupTitle] = useState(settings.telegramPopupTitle);
   const [popupDescription, setPopupDescription] = useState(settings.telegramPopupDescription);
-  const [delaySec, setDelaySec] = useState<number | string>(settings.telegramPopupDelaySec || 4);
+  const [delaySec, setDelaySec] = useState<number | string>(
+    Math.max(1, Number(settings.telegramPopupDelaySec) || 4)
+  );
   const [enabled, setEnabled] = useState<boolean>(settings.telegramPopupEnabled ?? true);
   const [siteName, setSiteName] = useState(settings.siteName || 'StreamPulse');
   const [profilePicUrl, setProfilePicUrl] = useState(settings.telegramProfilePicUrl || '');
@@ -42,6 +44,15 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isCountingDown, setIsCountingDown] = useState(false);
   const [remainingTime, setRemainingTime] = useState<number>(4);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (countdownIntervalRef.current) {
+        clearInterval(countdownIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Sync state when props change
   useEffect(() => {
@@ -84,17 +95,25 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
   };
 
   const startCountdownTest = () => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+
+    const numericDelay = Math.max(1, Number(delaySec) || 4);
     setIsCountingDown(true);
-    const numericDelay = Number(delaySec) || 4;
     setRemainingTime(numericDelay);
     setIsPreviewModalOpen(false);
 
     let timeLeft = numericDelay;
-    const interval = setInterval(() => {
+    countdownIntervalRef.current = setInterval(() => {
       timeLeft -= 1;
       setRemainingTime(timeLeft);
       if (timeLeft <= 0) {
-        clearInterval(interval);
+        if (countdownIntervalRef.current) {
+          clearInterval(countdownIntervalRef.current);
+          countdownIntervalRef.current = null;
+        }
         setIsCountingDown(false);
         setIsPreviewModalOpen(true);
       }
@@ -102,6 +121,10 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
   };
 
   const openInstantPreview = () => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
     setIsCountingDown(false);
     setIsPreviewModalOpen(true);
   };

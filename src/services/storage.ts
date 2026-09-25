@@ -214,7 +214,6 @@ export const StorageService = {
     return banners;
   },
 
-  // Settings
   getSettings(): GeneralSettings {
     try {
       const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
@@ -222,9 +221,12 @@ export const StorageService = {
         localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(DEFAULT_SETTINGS));
         return DEFAULT_SETTINGS;
       }
+      const parsed = JSON.parse(stored);
+      const delayNum = Number(parsed.telegramPopupDelaySec ?? parsed.popupDelay ?? parsed.delay);
       return {
         ...DEFAULT_SETTINGS,
-        ...JSON.parse(stored),
+        ...parsed,
+        telegramPopupDelaySec: !isNaN(delayNum) && delayNum >= 1 ? Math.round(delayNum) : 4,
       };
     } catch (e) {
       console.error('Failed to load settings from storage', e);

@@ -50,8 +50,11 @@ export const LiveFrontendSimulator: React.FC<LiveFrontendSimulatorProps> = ({
 
   // Telegram modal state in viewer simulation
   const [isTelegramModalVisible, setIsTelegramModalVisible] = useState(false);
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(settings.telegramPopupDelaySec || 4);
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(() =>
+    Math.max(1, Number(settings.telegramPopupDelaySec) || 4)
+  );
   const [isTimerRunning, setIsTimerRunning] = useState(true);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Adsterra state & trigger counters in simulator
   const [triggerUpdateNonce, setTriggerUpdateNonce] = useState(0);
@@ -81,51 +84,57 @@ export const LiveFrontendSimulator: React.FC<LiveFrontendSimulatorProps> = ({
     }
   }, [settings.adsterraAds]);
 
-  // Run the countdown timer based on admin configured delay
-  useEffect(() => {
+  // Helper to start/restart countdown cleanly
+  const startCountdown = (delay: number) => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+
     if (!settings.telegramPopupEnabled) {
       setIsTelegramModalVisible(false);
+      setIsTimerRunning(false);
       return;
     }
 
-    setSecondsRemaining(settings.telegramPopupDelaySec || 4);
-    setIsTimerRunning(true);
+    const safeDelay = Math.max(1, Number(delay) || 4);
     setIsTelegramModalVisible(false);
+    setSecondsRemaining(safeDelay);
+    setIsTimerRunning(true);
 
-    let currentSeconds = settings.telegramPopupDelaySec || 4;
-    const timer = setInterval(() => {
+    let currentSeconds = safeDelay;
+    timerRef.current = setInterval(() => {
       currentSeconds -= 1;
       setSecondsRemaining(currentSeconds);
 
       if (currentSeconds <= 0) {
-        clearInterval(timer);
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
         setIsTimerRunning(false);
         setIsTelegramModalVisible(true);
       }
     }, 1000);
+  };
 
-    return () => clearInterval(timer);
+  // Run the countdown timer based on admin configured delay
+  useEffect(() => {
+    startCountdown(settings.telegramPopupDelaySec || 4);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [settings.telegramPopupDelaySec, settings.telegramPopupEnabled]);
 
   const restartSimulation = () => {
-    setIsTelegramModalVisible(false);
-    setIsTimerRunning(true);
-    setSecondsRemaining(settings.telegramPopupDelaySec || 4);
     setSocialBarDismissed(false);
     AdsterraInjector.resetSessionTriggers();
     setTriggerUpdateNonce((n) => n + 1);
-
-    let currentSeconds = settings.telegramPopupDelaySec || 4;
-    const timer = setInterval(() => {
-      currentSeconds -= 1;
-      setSecondsRemaining(currentSeconds);
-
-      if (currentSeconds <= 0) {
-        clearInterval(timer);
-        setIsTimerRunning(false);
-        setIsTelegramModalVisible(true);
-      }
-    }, 1000);
+    startCountdown(settings.telegramPopupDelaySec || 4);
   };
 
   // Intercept click inside simulated viewport to execute popunders continuously with multi-script power

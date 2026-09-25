@@ -180,14 +180,21 @@ export function parseSettingsData(data: any): GeneralSettings {
       data.description ||
       data.message ||
       DEFAULT_SETTINGS.telegramPopupDescription,
-    telegramPopupDelaySec:
-      typeof data.telegramPopupDelaySec === 'number'
-        ? data.telegramPopupDelaySec
-        : typeof data.popupDelay === 'number'
-        ? data.popupDelay
-        : typeof data.delay === 'number'
-        ? data.delay
-        : DEFAULT_SETTINGS.telegramPopupDelaySec,
+    telegramPopupDelaySec: (() => {
+      const val =
+        data.telegramPopupDelaySec ??
+        data.popupDelay ??
+        data.delay ??
+        data.popupDelaySec ??
+        data.delaySec;
+      if (val !== undefined && val !== null && val !== '') {
+        const num = Number(val);
+        if (!isNaN(num) && num >= 1) {
+          return Math.round(num);
+        }
+      }
+      return DEFAULT_SETTINGS.telegramPopupDelaySec || 4;
+    })(),
     telegramPopupEnabled:
       typeof data.telegramPopupEnabled === 'boolean'
         ? data.telegramPopupEnabled
