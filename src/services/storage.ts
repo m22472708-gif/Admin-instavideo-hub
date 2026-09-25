@@ -16,6 +16,8 @@ const DEFAULT_SETTINGS: GeneralSettings = {
   telegramPopupDescription: 'Get instant notifications for new 4K episodes, direct download mirrors, and exclusive community movie polls!',
   telegramPopupDelaySec: 4,
   telegramPopupEnabled: true,
+  telegramProfilePicUrl: '',
+  telegramCoverPicUrl: '',
   siteName: 'StreamPulse',
   logoUrl: '',
   tagline: 'Premium Cinema & Web Series Hub',

@@ -57,13 +57,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: `${activeBannersCount} active`,
     },
     {
-      id: 'adsterra' as ActiveTab,
-      label: 'Adsterra Ads',
-      icon: TrendingUp,
-      badge: `${(settings.adsterraAds || []).filter((a) => a.enabled).length} active`,
-      badgeColor: (settings.adsterraAds || []).some((a) => a.enabled) ? 'text-amber-400 bg-amber-950/40' : 'text-zinc-400 bg-zinc-800',
-    },
-    {
       id: 'telegram' as ActiveTab,
       label: 'Telegram & Popup',
       icon: Send,

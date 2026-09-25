@@ -15,6 +15,9 @@ import {
   RotateCcw,
   X,
   BellRing,
+  Image as ImageIcon,
+  Trash2,
+  UserCircle,
 } from 'lucide-react';
 
 interface TelegramManagerProps {
@@ -31,6 +34,8 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
   const [delaySec, setDelaySec] = useState<number | string>(settings.telegramPopupDelaySec || 4);
   const [enabled, setEnabled] = useState<boolean>(settings.telegramPopupEnabled ?? true);
   const [siteName, setSiteName] = useState(settings.siteName || 'StreamPulse');
+  const [profilePicUrl, setProfilePicUrl] = useState(settings.telegramProfilePicUrl || '');
+  const [coverPicUrl, setCoverPicUrl] = useState(settings.telegramCoverPicUrl || '');
   const [isSaving, setIsSaving] = useState(false);
 
   // Simulator modal state
@@ -46,6 +51,8 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
     setDelaySec(settings.telegramPopupDelaySec || 4);
     setEnabled(settings.telegramPopupEnabled ?? true);
     setSiteName(settings.siteName || 'StreamPulse');
+    setProfilePicUrl(settings.telegramProfilePicUrl || '');
+    setCoverPicUrl(settings.telegramCoverPicUrl || '');
   }, [settings]);
 
   const handleSave = async (e: React.FormEvent) => {
@@ -58,6 +65,8 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
         telegramPopupDescription: popupDescription.trim(),
         telegramPopupDelaySec: Number(delaySec) || 4,
         telegramPopupEnabled: enabled,
+        telegramProfilePicUrl: profilePicUrl.trim(),
+        telegramCoverPicUrl: coverPicUrl.trim(),
         siteName: siteName.trim(),
       });
 
@@ -76,10 +85,11 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
 
   const startCountdownTest = () => {
     setIsCountingDown(true);
-    setRemainingTime(delaySec);
+    const numericDelay = Number(delaySec) || 4;
+    setRemainingTime(numericDelay);
     setIsPreviewModalOpen(false);
 
-    let timeLeft = delaySec;
+    let timeLeft = numericDelay;
     const interval = setInterval(() => {
       timeLeft -= 1;
       setRemainingTime(timeLeft);
@@ -197,6 +207,146 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
               </p>
             </div>
 
+            {/* Visual Branding: Profile Picture / Avatar & Cover Banner Picture */}
+            <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-zinc-950/60 border border-slate-200/80 dark:border-zinc-800/80 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-zinc-800/60">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300 flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-sky-500" />
+                  Telegram Popup Visual Assets
+                </span>
+                <span className="text-[10px] text-slate-400 dark:text-zinc-500">Custom avatar & cover banner</span>
+              </div>
+
+              {/* 1. Profile Picture / Avatar URL */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                    Profile Picture / Avatar URL
+                  </label>
+                  {profilePicUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setProfilePicUrl('')}
+                      className="text-[11px] font-medium text-rose-500 hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Live circular thumbnail preview (rounded-full) */}
+                  <div
+                    className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full border-2 border-sky-500/50 bg-slate-200 dark:bg-zinc-800 shadow-sm shrink-0 overflow-hidden flex items-center justify-center"
+                    title="Live circular thumbnail preview (rounded-full)"
+                  >
+                    {profilePicUrl ? (
+                      <img
+                        src={profilePicUrl}
+                        alt="Avatar Preview"
+                        className="w-full h-full object-cover rounded-full"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-tr from-sky-500 to-blue-600 text-white flex items-center justify-center">
+                        <Send className="w-6 h-6 -rotate-12 translate-x-0.5" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Input field with Clear button */}
+                  <div className="flex-1 flex gap-2">
+                    <input
+                      type="url"
+                      value={profilePicUrl}
+                      onChange={(e) => setProfilePicUrl(e.target.value)}
+                      placeholder="https://.../channel-avatar.jpg"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 font-mono text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setProfilePicUrl('')}
+                      disabled={!profilePicUrl}
+                      className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:text-rose-500 hover:border-rose-500/40 disabled:opacity-40 disabled:hover:text-inherit disabled:hover:border-inherit transition-all shrink-0 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                  Image URL for the Telegram channel logo/avatar shown in the 3D circular badge.
+                </p>
+              </div>
+
+              {/* 2. Cover Banner Picture URL */}
+              <div className="space-y-2 pt-2 border-t border-slate-200/50 dark:border-zinc-800/60">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-zinc-300">
+                    Cover Banner Picture URL
+                  </label>
+                  {coverPicUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setCoverPicUrl('')}
+                      className="text-[11px] font-medium text-rose-500 hover:text-rose-400 flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                  {/* Live wide rectangular preview (rounded-xl) */}
+                  <div
+                    className="relative w-full sm:w-36 h-20 sm:h-20 rounded-xl border border-sky-500/40 bg-zinc-900 overflow-hidden shadow-xs shrink-0 flex items-center justify-center"
+                    title="Live wide rectangular preview (rounded-xl)"
+                  >
+                    {coverPicUrl ? (
+                      <img
+                        src={coverPicUrl}
+                        alt="Cover Preview"
+                        className="w-full h-full object-cover rounded-xl"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-r from-sky-950/60 via-blue-900/30 to-zinc-900 flex flex-col items-center justify-center p-2 text-center text-[10px] text-zinc-400">
+                        <ImageIcon className="w-4 h-4 text-sky-400 mb-0.5" />
+                        <span>Default Header</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Input field with Clear button */}
+                  <div className="flex-1 w-full flex gap-2">
+                    <input
+                      type="url"
+                      value={coverPicUrl}
+                      onChange={(e) => setCoverPicUrl(e.target.value)}
+                      placeholder="https://.../popup-header-banner.jpg"
+                      className="flex-1 px-3.5 py-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 font-mono text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-sky-500 transition-all"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCoverPicUrl('')}
+                      disabled={!coverPicUrl}
+                      className="px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:text-rose-500 hover:border-rose-500/40 disabled:opacity-40 disabled:hover:text-inherit disabled:hover:border-inherit transition-all shrink-0 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-zinc-500">
+                  Image URL for the top header cover banner of the popup.
+                </p>
+              </div>
+            </div>
+
             {/* Site Name & Delay Seconds */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -309,15 +459,43 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
             </h3>
 
             {/* In-container simulated glass card */}
-            <div className="relative rounded-2xl overflow-hidden p-6 border border-sky-500/30 bg-gradient-to-br from-zinc-950/90 via-sky-950/40 to-zinc-950/95 backdrop-blur-xl shadow-2xl text-center">
+            <div className="relative rounded-2xl overflow-hidden border border-sky-500/30 bg-gradient-to-br from-zinc-950/90 via-sky-950/40 to-zinc-950/95 backdrop-blur-xl shadow-2xl text-center">
               {/* Background ambient light */}
               <div className="absolute -top-12 -left-12 w-36 h-36 bg-sky-500/20 rounded-full blur-2xl pointer-events-none" />
               <div className="absolute -bottom-12 -right-12 w-36 h-36 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
 
-              <div className="relative z-10">
-                {/* Glowing Telegram Icon */}
-                <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white mx-auto flex items-center justify-center shadow-lg shadow-sky-500/30 ring-4 ring-sky-500/20 mb-4 animate-pulse">
-                  <Send className="w-8 h-8 -rotate-12 translate-x-0.5" />
+              {/* Top Header Cover Banner */}
+              {coverPicUrl ? (
+                <div className="relative h-28 w-full overflow-hidden bg-zinc-900 border-b border-sky-500/20">
+                  <img
+                    src={coverPicUrl}
+                    alt="Cover Banner"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+                </div>
+              ) : (
+                <div className="h-14 w-full bg-gradient-to-b from-sky-500/20 via-blue-600/10 to-transparent" />
+              )}
+
+              <div className={`p-6 ${coverPicUrl ? '-mt-10' : ''} relative z-10`}>
+                {/* 3D Circular Badge / Avatar */}
+                <div className="relative w-16 h-16 rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 text-white mx-auto flex items-center justify-center shadow-lg shadow-sky-500/30 ring-4 ring-sky-500/20 border-2 border-white/20 mb-3 overflow-hidden">
+                  {profilePicUrl ? (
+                    <img
+                      src={profilePicUrl}
+                      alt="Telegram Avatar"
+                      className="w-full h-full object-cover rounded-full"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <Send className="w-8 h-8 -rotate-12 translate-x-0.5 animate-pulse" />
+                  )}
                 </div>
 
                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-sky-500/10 text-sky-400 border border-sky-500/20 mb-2">
@@ -367,6 +545,12 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
                 </span>
               </div>
               <div className="flex items-center justify-between">
+                <span className="font-semibold text-slate-800 dark:text-zinc-200">Avatar / Banner:</span>
+                <span className="font-mono text-[11px] text-sky-400">
+                  {profilePicUrl ? 'Custom Avatar' : 'Default'} • {coverPicUrl ? 'Custom Banner' : 'Default'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="font-semibold text-slate-800 dark:text-zinc-200">Status:</span>
                 <span className={enabled ? 'text-emerald-500 font-semibold' : 'text-zinc-500'}>
                   {enabled ? 'Active on Frontend' : 'Disabled'}
@@ -380,56 +564,86 @@ export const TelegramManager: React.FC<TelegramManagerProps> = ({ settings, onRe
       {/* FULL-SCREEN LIVE POPUP SIMULATOR MODAL */}
       {isPreviewModalOpen && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/85 backdrop-blur-md p-4 flex justify-center items-start sm:items-center pt-8 sm:pt-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-3xl p-6 sm:p-7 border border-sky-500/30 bg-zinc-950/95 text-center shadow-2xl backdrop-blur-2xl ring-1 ring-white/10 animate-in zoom-in-95 duration-200 my-auto">
+          <div className="relative w-full max-w-md rounded-3xl overflow-hidden border border-sky-500/30 bg-zinc-950/95 text-center shadow-2xl backdrop-blur-2xl ring-1 ring-white/10 animate-in zoom-in-95 duration-200 my-auto">
+            {/* Top Cover Banner */}
+            {coverPicUrl ? (
+              <div className="relative h-36 w-full overflow-hidden bg-zinc-900 border-b border-sky-500/20">
+                <img
+                  src={coverPicUrl}
+                  alt="Cover Banner"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLElement).style.display = 'none';
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/30 to-transparent" />
+              </div>
+            ) : (
+              <div className="h-18 w-full bg-gradient-to-b from-sky-500/20 via-blue-600/10 to-transparent" />
+            )}
+
             {/* Close / Back button */}
             <button
               type="button"
               onClick={() => setIsPreviewModalOpen(false)}
-              className="absolute top-4 right-4 p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="absolute top-4 right-4 z-20 p-2 rounded-full text-zinc-300 hover:text-white bg-black/50 hover:bg-black/80 transition-colors backdrop-blur-xs cursor-pointer"
               aria-label="Close Preview"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Glowing Telegram Icon */}
-            <div className="w-18 h-18 rounded-3xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white mx-auto flex items-center justify-center shadow-xl shadow-sky-500/40 ring-4 ring-sky-500/20 mb-4">
-              <Send className="w-9 h-9 -rotate-12 translate-x-0.5" />
-            </div>
+            <div className={`p-6 sm:p-7 ${coverPicUrl ? '-mt-14' : ''} relative z-10`}>
+              {/* 3D Circular Badge / Avatar */}
+              <div className="relative w-20 h-20 rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 text-white mx-auto flex items-center justify-center shadow-xl shadow-sky-500/40 ring-4 ring-sky-500/30 border-2 border-white/30 mb-4 overflow-hidden">
+                {profilePicUrl ? (
+                  <img
+                    src={profilePicUrl}
+                    alt="Telegram Avatar"
+                    className="w-full h-full object-cover rounded-full"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                    }}
+                  />
+                ) : (
+                  <Send className="w-9 h-9 -rotate-12 translate-x-0.5" />
+                )}
+              </div>
 
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30 mb-2">
-              <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-              {siteName} VIP Channel
-            </div>
+              <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-sky-500/20 text-sky-300 border border-sky-500/30 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                {siteName} VIP Channel
+              </div>
 
-            <h3 className="text-xl font-extrabold text-white tracking-tight">
-              {popupTitle || 'Join Our Official Telegram'}
-            </h3>
+              <h3 className="text-xl font-extrabold text-white tracking-tight">
+                {popupTitle || 'Join Our Official Telegram'}
+              </h3>
 
-            <p className="text-xs text-zinc-300 mt-2 leading-relaxed">
-              {popupDescription || 'Get instant 4K release links, new episode alerts, and direct movie requests!'}
-            </p>
+              <p className="text-xs text-zinc-300 mt-2 leading-relaxed">
+                {popupDescription || 'Get instant 4K release links, new episode alerts, and direct movie requests!'}
+              </p>
 
-            <div className="mt-6 space-y-2.5">
-              <a
-                href={channelUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => {
-                  showSuccessToast('Testing Link', 'Redirecting to your official Telegram channel');
-                }}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-950/50 transition-all uppercase tracking-wider"
-              >
-                <Send className="w-4 h-4 -rotate-12" />
-                Join Channel on Telegram
-              </a>
+              <div className="mt-6 space-y-2.5">
+                <a
+                  href={channelUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    showSuccessToast('Testing Link', 'Redirecting to your official Telegram channel');
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-sky-950/50 transition-all uppercase tracking-wider"
+                >
+                  <Send className="w-4 h-4 -rotate-12" />
+                  Join Channel on Telegram
+                </a>
 
-              <button
-                type="button"
-                onClick={() => setIsPreviewModalOpen(false)}
-                className="w-full py-2.5 text-xs text-zinc-400 hover:text-white transition-colors"
-              >
-                Maybe Later (Dismiss)
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setIsPreviewModalOpen(false)}
+                  className="w-full py-2.5 text-xs text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Maybe Later (Dismiss)
+                </button>
+              </div>
             </div>
           </div>
         </div>

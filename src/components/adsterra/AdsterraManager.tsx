@@ -552,7 +552,7 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
         ) : (
           <div className="space-y-3.5">
             {adsList.map((ad) => {
-              const typeBadges = {
+              const typeBadges: Record<string, { label: string; bg: string }> = {
                 popunder: { label: 'Popunder', bg: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' },
                 socialbar: { label: 'Social Bar', bg: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' },
                 native_banner: { label: 'Native Banner', bg: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20' },
@@ -561,14 +561,14 @@ export const AdsterraManager: React.FC<AdsterraManagerProps> = ({
               };
               const currentType = typeBadges[ad.type] || typeBadges.custom_script;
 
-              const placementLabels = {
+              const placementLabels: Record<string, { label: string; icon: any }> = {
                 homepage: { label: 'Homepage Only', icon: Monitor },
                 video_page: { label: 'Video Page Only', icon: VideoIcon },
                 both: { label: 'Both (Home & Video)', icon: Layers },
               };
               const currentPlacement = placementLabels[ad.placement] || placementLabels.both;
               const PlacementIcon = currentPlacement.icon;
-              const multiplierVal = ad.multiplier || ad.maxTriggers || 5;
+              const multiplierVal = (ad as any).multiplier || (ad as any).maxTriggers || 5;
 
               return (
                 <div

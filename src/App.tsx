@@ -13,7 +13,6 @@ import { VideoManager } from './components/videos/VideoManager';
 import { BannerManager } from './components/banners/BannerManager';
 import { TelegramManager } from './components/telegram/TelegramManager';
 import { LiveFrontendSimulator } from './components/simulator/LiveFrontendSimulator';
-import { AdsterraManager } from './components/adsterra/AdsterraManager';
 import { SystemSettings } from './components/settings/SystemSettings';
 import { VideoFormModal } from './components/videos/VideoFormModal';
 import { BannerFormModal } from './components/banners/BannerFormModal';
@@ -247,14 +246,6 @@ function DashboardContent() {
                   banners={banners}
                   onRefresh={refreshData}
                   onDeleteSuccess={handleDeleteBannerImmediate}
-                />
-              )}
-
-              {activeTab === 'adsterra' && (
-                <AdsterraManager
-                  settings={settings}
-                  onRefresh={refreshData}
-                  onOpenSimulator={() => setActiveTab('simulator')}
                 />
               )}
 

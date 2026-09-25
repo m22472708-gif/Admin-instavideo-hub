@@ -61,6 +61,8 @@ export const DEFAULT_SETTINGS: GeneralSettings = {
   telegramPopupDescription: 'Get instant notifications for new 4K episodes, direct download mirrors, and exclusive community movie polls!',
   telegramPopupDelaySec: 4,
   telegramPopupEnabled: true,
+  telegramProfilePicUrl: '',
+  telegramCoverPicUrl: '',
   siteName: 'StreamPulse',
   adminPin: '1234',
   unlockAdEnabled: true,
@@ -194,6 +196,20 @@ export function parseSettingsData(data: any): GeneralSettings {
         : typeof data.enabled === 'boolean'
         ? data.enabled
         : DEFAULT_SETTINGS.telegramPopupEnabled,
+    telegramProfilePicUrl:
+      data.telegramProfilePicUrl ||
+      data.telegramAvatarUrl ||
+      data.telegramProfilePic ||
+      data.profilePicUrl ||
+      data.avatarUrl ||
+      '',
+    telegramCoverPicUrl:
+      data.telegramCoverPicUrl ||
+      data.telegramCoverUrl ||
+      data.telegramBannerUrl ||
+      data.coverPicUrl ||
+      data.coverUrl ||
+      '',
     siteName: data.siteName || DEFAULT_SETTINGS.siteName,
     logoUrl: data.logoUrl || data.logo || data.siteLogo || DEFAULT_SETTINGS.logoUrl || '',
     tagline: data.tagline || data.siteTagline || data.subTitle || data.subtitle || DEFAULT_SETTINGS.tagline || '',
@@ -949,6 +965,10 @@ export const FirebaseService = {
       enabled: Boolean(merged.telegramPopupEnabled),
       isPopupEnabled: Boolean(merged.telegramPopupEnabled),
       showPopup: Boolean(merged.telegramPopupEnabled),
+      telegramProfilePicUrl: merged.telegramProfilePicUrl ? merged.telegramProfilePicUrl.trim() : '',
+      profilePicUrl: merged.telegramProfilePicUrl ? merged.telegramProfilePicUrl.trim() : '',
+      telegramCoverPicUrl: merged.telegramCoverPicUrl ? merged.telegramCoverPicUrl.trim() : '',
+      coverPicUrl: merged.telegramCoverPicUrl ? merged.telegramCoverPicUrl.trim() : '',
       siteName: merged.siteName,
       name: merged.siteName,
       logoUrl: merged.logoUrl || '',

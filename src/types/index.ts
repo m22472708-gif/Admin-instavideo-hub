@@ -36,32 +36,14 @@ export interface Banner {
   badge?: string;
 }
 
-// ============================================================================
-// 💰 ADSTERRA ADVERTISING CONFIGURATION
-// ============================================================================
-export type AdsterraAdType = 'popunder' | 'socialbar' | 'native_banner' | 'direct_link' | 'custom_script';
-export type AdsterraPlacement = 'homepage' | 'video_page' | 'both';
-
-export interface AdsterraAdConfig {
-  id: string;
-  name: string; // e.g., "Adsterra Popunder 5x Multiplier"
-  type: AdsterraAdType; // 'popunder' | 'socialbar' | 'native_banner' | 'direct_link' | 'custom_script'
-  scriptCode: string; // The script tag or direct link/code provided by Adsterra
-  placement: AdsterraPlacement; // 'homepage' | 'video_page' | 'both'
-  maxTriggers: number; // Script multiplier / instance count (e.g. 5x script instances injected in parallel)
-  multiplier?: number; // 5x instances
-  continuous?: boolean; // Always true: Never turns off, continues running perpetually
-  enabled: boolean;
-  notes?: string;
-  createdAt: number;
-}
-
 export interface GeneralSettings {
   telegramChannelUrl: string;
   telegramPopupTitle: string;
   telegramPopupDescription: string;
   telegramPopupDelaySec: number;
   telegramPopupEnabled: boolean;
+  telegramProfilePicUrl?: string;
+  telegramCoverPicUrl?: string;
   siteName: string;
   logoUrl?: string;
   tagline?: string;
@@ -72,11 +54,30 @@ export interface GeneralSettings {
   unlockAdRequiredClicks: number;
   unlockAdWaitSeconds: number;
   unlockAdButtonText?: string;
-  // Adsterra Ads Engine
   adsterraAds?: AdsterraAdConfig[];
 }
 
-export type ActiveTab = 'overview' | 'videos' | 'banners' | 'adsterra' | 'telegram' | 'simulator' | 'settings';
+export type AdsterraAdType = 'popunder' | 'socialbar' | 'native_banner' | 'direct_link' | 'custom_script';
+export type AdsterraPlacement = 'homepage' | 'video_page' | 'both';
+
+export interface AdsterraAdConfig {
+  id: string;
+  name: string;
+  type: AdsterraAdType;
+  placement: AdsterraPlacement;
+  scriptSnippet?: string;
+  scriptCode: any;
+  enabled: boolean;
+  notes?: string;
+  frequency?: number;
+  multiplier?: number;
+  maxTriggers?: number;
+  continuous?: boolean;
+  createdAt: number;
+  updatedAt?: number;
+}
+
+export type ActiveTab = 'overview' | 'videos' | 'banners' | 'telegram' | 'simulator' | 'settings';
 
 export interface ToastMessage {
   id: string;

@@ -324,54 +324,36 @@ export const OverviewStats: React.FC<OverviewStatsProps> = ({
           </div>
         </div>
 
-        {/* Metric 4: Ad Monetization Engine */}
+        {/* Metric 4: Telegram & Glass Popup */}
         <div
-          onClick={() => setActiveTab('adsterra')}
-          className="relative p-6 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200/80 dark:border-zinc-800 hover:border-emerald-500 dark:hover:border-emerald-500 shadow-sm hover:shadow-xl hover:shadow-emerald-500/10 transition-all cursor-pointer group overflow-hidden"
+          onClick={() => setActiveTab('telegram')}
+          className="relative p-6 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200/80 dark:border-zinc-800 hover:border-sky-500 dark:hover:border-sky-500 shadow-sm hover:shadow-xl hover:shadow-sky-500/10 transition-all cursor-pointer group overflow-hidden"
         >
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-blue-600" />
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
-              Adsterra Ads & Monetization
+              Telegram VIP Modal
             </span>
-            <div className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-              <Zap className="w-5 h-5" />
+            <div className="p-3 rounded-2xl bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:scale-110 transition-transform">
+              <Send className="w-5 h-5" />
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
             <span className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono tracking-tight">
-              {(settings.adsterraAds || []).filter((a) => a.enabled).length}
+              {settings.telegramPopupEnabled ? 'Active' : 'Paused'}
               <span className="text-xs font-semibold text-slate-400 dark:text-zinc-500 ml-1.5">
-                Active Units
+                ({settings.telegramPopupDelaySec || 4}s Delay)
               </span>
             </span>
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5 group-hover:translate-x-1 transition-transform">
-              Manage Ads <ChevronRight className="w-3.5 h-3.5" />
+            <span className="text-xs font-bold text-sky-600 dark:text-sky-400 flex items-center gap-0.5 group-hover:translate-x-1 transition-transform">
+              Configure <ChevronRight className="w-3.5 h-3.5" />
             </span>
           </div>
           <div className="mt-3 pt-3 border-t border-slate-100 dark:border-zinc-800/80 flex items-center justify-between text-xs text-slate-500 dark:text-zinc-400">
-            {(() => {
-              const activeAds = (settings.adsterraAds || []).filter((a) => a.enabled);
-              const hasPopunder = activeAds.some((a) => a.type === 'popunder' || a.type === 'direct_link');
-              const hasSocialBar = activeAds.some((a) => a.type === 'socialbar');
-              const hasBanner = activeAds.some((a) => a.type === 'native_banner' || a.type === 'custom_script');
-
-              const labels: string[] = [];
-              if (hasPopunder) labels.push('Popunder');
-              if (hasSocialBar) labels.push('Social Bar');
-              if (hasBanner) labels.push('Banner');
-
-              return (
-                <>
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    {labels.length > 0 ? labels.join(' • ') : 'No Ads Running'}
-                  </span>
-                  <span className="font-bold text-slate-700 dark:text-zinc-300 font-mono text-[11px]">
-                    {activeAds.length > 0 ? '🟢 LIVE' : '⚪ OFF'}
-                  </span>
-                </>
-              );
-            })()}
+            <span className="truncate max-w-[170px]">{settings.telegramPopupTitle || 'VIP Channel'}</span>
+            <span className={`font-bold font-mono text-[11px] ${settings.telegramPopupEnabled ? 'text-emerald-500' : 'text-zinc-400'}`}>
+              {settings.telegramPopupEnabled ? '🟢 ENABLED' : '⚪ OFF'}
+            </span>
           </div>
         </div>
       </div>

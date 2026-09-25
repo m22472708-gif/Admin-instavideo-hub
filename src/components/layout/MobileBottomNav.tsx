@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Film,
   Images,
-  TrendingUp,
   Send,
   MonitorPlay,
   Settings,
@@ -27,7 +26,6 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     { id: 'overview' as ActiveTab, label: 'Overview', icon: LayoutDashboard },
     { id: 'videos' as ActiveTab, label: 'Videos', icon: Film, count: videoCount },
     { id: 'banners' as ActiveTab, label: 'Banners', icon: Images },
-    { id: 'adsterra' as ActiveTab, label: 'Adsterra', icon: TrendingUp },
     { id: 'telegram' as ActiveTab, label: 'Telegram', icon: Send, dot: telegramEnabled },
     { id: 'simulator' as ActiveTab, label: 'Simulator', icon: MonitorPlay },
     { id: 'settings' as ActiveTab, label: 'Settings', icon: Settings },
@@ -35,7 +33,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-zinc-950/95 border-t border-slate-200 dark:border-zinc-800 backdrop-blur-lg shadow-lg safe-area-bottom">
-      <div className="grid grid-cols-7 h-15 items-center px-1">
+      <div className="grid grid-cols-6 h-15 items-center px-1">
         {items.map((item) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;

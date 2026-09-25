@@ -31,10 +31,6 @@ const TAB_TITLES: Record<ActiveTab, { title: string; subtitle: string }> = {
     title: 'Hero Banner Slider Manager',
     subtitle: 'Frontpage promotional billboard slides, toggles, and backdrops.',
   },
-  adsterra: {
-    title: 'Adsterra Advertising Engine',
-    subtitle: 'Manage Popunder, Social Bar, and custom ad scripts with trigger counts and target placements.',
-  },
   telegram: {
     title: 'Telegram & Glass Modal Control',
     subtitle: 'Configure channel link, 4-second delay, copy, and test live preview.',
